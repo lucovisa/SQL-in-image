@@ -55,8 +55,8 @@
         }
         body {
             background-color: #3a6ea5;
-            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%233a6ea5"/><rect y="70" width="100" height="30" fill="%235c8c3c"/></svg>');
-            background-size: 100% 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="800" height="600" fill="%233a6ea5"/><rect y="420" width="800" height="180" fill="%235c8c3c"/><ellipse cx="150" cy="100" rx="60" ry="30" fill="white" opacity="0.8"/><ellipse cx="200" cy="90" rx="50" ry="25" fill="white" opacity="0.7"/><ellipse cx="650" cy="80" rx="55" ry="28" fill="white" opacity="0.75"/><ellipse cx="700" cy="70" rx="45" ry="22" fill="white" opacity="0.65"/><ellipse cx="400" cy="150" rx="40" ry="20" fill="white" opacity="0.5"/><ellipse cx="450" cy="140" rx="35" ry="18" fill="white" opacity="0.45"/></svg>');
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -126,6 +126,7 @@
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
+            cursor: default;
         }
         .title-bar-buttons {
             display: flex;
@@ -145,6 +146,7 @@
             color: var(--text);
             line-height: 1;
             padding: 0;
+            pointer-events: auto;
         }
         .title-btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -271,6 +273,8 @@
             font-family: inherit;
             color: var(--text);
             margin: 2px;
+            text-decoration: none;
+            display: inline-block;
         }
         .btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -312,6 +316,16 @@
             align-items: center;
             font-weight: bold;
             cursor: move;
+        }
+        .modal-title-bar span {
+            pointer-events: none;
+            flex: 1;
+        }
+        .modal-title-bar .title-bar-buttons {
+            pointer-events: auto;
+        }
+        .modal-title-bar .title-btn {
+            pointer-events: auto;
         }
         .modal-content {
             padding: 20px;
@@ -413,7 +427,7 @@
             <span>Folder</span>
         </div>
         <div class="desktop-icon" id="recycleBinIcon">
-            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='8' y='8' width='32' height='34' fill='%23f0f0f0' stroke='%23606060' stroke-width='2' rx='3'/><rect x='6' y='4' width='36' height='6' fill='%23c0c0c0' stroke='%23606060' stroke-width='2' rx='2'/><rect x='14' y='14' width='5' height='3' fill='%23c0c0c0'/><rect x='21' y='14' width='5' height='3' fill='%23c0c0c0'/><rect x='28' y='14' width='5' height='3' fill='%23c0c0c0'/><circle cx='24' cy='26' r='8' fill='none' stroke='%23606060' stroke-width='1.5'/><circle cx='24' cy='26' r='5' fill='none' stroke='%23606060' stroke-width='1'/></svg>" alt="Recycle Bin">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><path d='M12 8 L36 8 L34 42 Q34 44 32 44 L16 44 Q14 44 14 42 Z' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><path d='M8 4 L40 4 L38 8 L10 8 Z' fill='%23c0c0c0' stroke='%23606060' stroke-width='2'/><rect x='16' y='14' width='16' height='4' fill='%23c0c0c0'/><rect x='18' y='22' width='12' height='4' fill='%23c0c0c0'/><rect x='18' y='30' width='12' height='4' fill='%23c0c0c0'/></svg>" alt="Recycle Bin">
             <span>Recycle Bin</span>
         </div>
     </div>
@@ -482,6 +496,7 @@
                 <button class="btn" id="decodeSqlBtn">Decode SQL</button>
                 <h4>Extracted code:</h4>
                 <textarea id="decodedOutput" readonly></textarea>
+                <button class="btn" id="copyDecodedBtn">Copy</button>
             </div>
         </div>
     </div>
@@ -590,6 +605,7 @@
         let dragOffsetX, dragOffsetY;
 
         modalTitleBar.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.title-btn')) return;
             isDragging = true;
             const rect = modalWindow.getBoundingClientRect();
             dragOffsetX = e.clientX - rect.left;
@@ -622,6 +638,24 @@
                     btn.textContent = 'Copied!';
                     setTimeout(() => btn.textContent = 'Copy', 1500);
                 }
+            });
+        });
+
+        const copyDecodedBtn = document.getElementById('copyDecodedBtn');
+        copyDecodedBtn.addEventListener('click', () => {
+            const decodedText = document.getElementById('decodedOutput').value;
+            if (!decodedText) {
+                showAlert('Nothing to copy');
+                return;
+            }
+            navigator.clipboard.writeText(decodedText).then(() => {
+                copyDecodedBtn.textContent = 'Copied!';
+                setTimeout(() => copyDecodedBtn.textContent = 'Copy', 1500);
+            }).catch(() => {
+                document.getElementById('decodedOutput').select();
+                document.execCommand('copy');
+                copyDecodedBtn.textContent = 'Copied!';
+                setTimeout(() => copyDecodedBtn.textContent = 'Copy', 1500);
             });
         });
 
@@ -839,18 +873,25 @@
             canvas.width = 600;
             canvas.height = 400;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
+            const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+            gradient.addColorStop(0, '#000080');
+            gradient.addColorStop(1, '#008080');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 600, 400);
-            ctx.fillStyle = '#000080';
-            ctx.font = 'bold 16px Tahoma';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            const lines = inputData.split('\n').slice(0, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px Tahoma';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const lines = inputData.split('\n').slice(0, 15);
             lines.forEach((line, index) => {
-                ctx.fillText(line.substring(0, 80), 20, 20 + index * 18);
+                ctx.fillText(line.substring(0, 50), 300, 100 + index * 20);
             });
             const dataUrl = canvas.toDataURL('image/png');
-            createOutput.innerHTML = `<a href="${dataUrl}" download="created.png" class="btn">Download Image</a>`;
+            createOutput.innerHTML = `
+                <img src="${dataUrl}" alt="Created image" style="max-width:100%;">
+                <br>
+                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
+            `;
         });
 
         const dropZone = document.getElementById('dropZone');

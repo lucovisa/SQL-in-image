@@ -39,6 +39,24 @@
             --accent: #404080;
             --accent-text: #ffffff;
         }
+        [data-theme="dark"] textarea,
+        [data-theme="dark"] input,
+        [data-theme="dark"] select,
+        [data-theme="dark"] button,
+        [data-theme="dark"] label,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4,
+        [data-theme="dark"] p,
+        [data-theme="dark"] span {
+            color: #e0e0e0;
+        }
+        [data-theme="dark"] .title-bar,
+        [data-theme="dark"] .modal-title-bar {
+            color: #ffffff;
+        }
+        [data-theme="dark"] .title-btn {
+            color: #e0e0e0;
+        }
         [data-theme="ocean"] {
             --bg: #b0d0e0;
             --surface: #c0e0f0;
@@ -47,6 +65,24 @@
             --text: #002030;
             --accent: #004060;
             --accent-text: #ffffff;
+        }
+        [data-theme="ocean"] textarea,
+        [data-theme="ocean"] input,
+        [data-theme="ocean"] select,
+        [data-theme="ocean"] button,
+        [data-theme="ocean"] label,
+        [data-theme="ocean"] h3,
+        [data-theme="ocean"] h4,
+        [data-theme="ocean"] p,
+        [data-theme="ocean"] span {
+            color: #002030;
+        }
+        [data-theme="ocean"] .title-bar,
+        [data-theme="ocean"] .modal-title-bar {
+            color: #ffffff;
+        }
+        [data-theme="ocean"] .title-btn {
+            color: #002030;
         }
         * {
             box-sizing: border-box;
@@ -202,6 +238,7 @@
             cursor: pointer;
             text-align: center;
             font-weight: bold;
+            color: var(--text);
         }
         .tab-btn.active {
             background: var(--accent);
@@ -222,6 +259,7 @@
         }
         .tab-header h3 {
             flex: 1;
+            color: var(--text);
         }
         .clear-btn {
             padding: 3px 8px;
@@ -258,6 +296,7 @@
             cursor: pointer;
             margin: 10px 0;
             transition: background 0.2s;
+            color: var(--text);
         }
         .drag-drop.dragover {
             border-color: var(--accent);
@@ -290,7 +329,8 @@
             text-align: center;
         }
         .output-area img {
-            max-width: 100%;
+            max-width: 256px;
+            max-height: 256px;
             border: 2px inset;
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
@@ -326,6 +366,7 @@
         .modal-title-bar span {
             pointer-events: none;
             flex: 1;
+            color: var(--accent-text);
         }
         .modal-title-bar .title-bar-buttons {
             pointer-events: auto;
@@ -336,6 +377,7 @@
         .modal-content {
             padding: 20px;
             text-align: center;
+            color: var(--text);
         }
         .donate-address {
             margin: 10px 0;
@@ -345,6 +387,7 @@
             display: block;
             font-weight: bold;
             margin-bottom: 3px;
+            color: var(--text);
         }
         .address-row {
             display: flex;
@@ -368,6 +411,7 @@
             border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
             cursor: pointer;
             white-space: nowrap;
+            color: var(--text);
         }
         .copy-btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -391,12 +435,28 @@
             transform: translate(-50%, -50%);
             pointer-events: auto;
         }
+        .alert-title-bar {
+            background: var(--accent);
+            color: var(--accent-text);
+            padding: 5px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            cursor: move;
+        }
+        .alert-title-bar span {
+            pointer-events: none;
+            flex: 1;
+            color: var(--accent-text);
+        }
         .alert-content {
             padding: 20px;
             text-align: center;
         }
         .alert-content p {
             margin-bottom: 15px;
+            color: var(--text);
         }
         @media (max-width: 600px) {
             body {
@@ -418,6 +478,10 @@
             }
             .desktop-icon span {
                 font-size: 10px;
+            }
+            .output-area img {
+                max-width: 150px;
+                max-height: 150px;
             }
         }
     </style>
@@ -548,8 +612,8 @@
     </div>
 
     <div class="alert-modal" id="alertModal">
-        <div class="alert-window">
-            <div class="modal-title-bar">
+        <div class="alert-window" id="alertWindow">
+            <div class="alert-title-bar" id="alertTitleBar">
                 <span>LucCode</span>
                 <div class="title-bar-buttons">
                     <button class="title-btn close" id="closeAlertBtn">×</button>
@@ -703,13 +767,41 @@
         });
 
         const alertModal = document.getElementById('alertModal');
+        const alertWindow = document.getElementById('alertWindow');
         const alertText = document.getElementById('alertText');
         const closeAlertBtn = document.getElementById('closeAlertBtn');
         const closeAlertOk = document.getElementById('closeAlertOk');
+        const alertTitleBar = document.getElementById('alertTitleBar');
+
+        let isAlertDragging = false;
+        let alertDragOffsetX, alertDragOffsetY;
+
+        alertTitleBar.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.title-btn')) return;
+            isAlertDragging = true;
+            const rect = alertWindow.getBoundingClientRect();
+            alertDragOffsetX = e.clientX - rect.left;
+            alertDragOffsetY = e.clientY - rect.top;
+            alertWindow.style.transform = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isAlertDragging) return;
+            alertWindow.style.left = e.clientX - alertDragOffsetX + 'px';
+            alertWindow.style.top = e.clientY - alertDragOffsetY + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isAlertDragging = false;
+        });
 
         function showAlert(message) {
             alertText.textContent = message;
             alertModal.style.display = 'block';
+            alertWindow.style.left = '50%';
+            alertWindow.style.top = '50%';
+            alertWindow.style.transform = 'translate(-50%, -50%)';
         }
         function closeAlert() {
             alertModal.style.display = 'none';
@@ -847,6 +939,8 @@
             reader.onload = (e) => {
                 encodePreview.src = e.target.result;
                 encodePreview.style.display = 'block';
+                encodePreview.style.maxWidth = '150px';
+                encodePreview.style.maxHeight = '150px';
             };
             reader.readAsDataURL(file);
         }
@@ -918,7 +1012,7 @@
             const img = new Image();
             img.onload = () => {
                 createOutput.innerHTML = `
-                    <img src="${base64Data}" alt="Created image" style="max-width:100%;">
+                    <img src="${base64Data}" alt="Created image" style="max-width:256px;max-height:256px;">
                     <br>
                     <a href="${base64Data}" download="created.png" class="btn">Download Image</a>
                 `;
@@ -977,6 +1071,8 @@
                 currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 decodePreview.src = e.target.result;
                 decodePreview.style.display = 'block';
+                decodePreview.style.maxWidth = '150px';
+                decodePreview.style.maxHeight = '150px';
             };
             reader.readAsDataURL(file);
         }

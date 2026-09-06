@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Stego</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <meta property="og:title" content="SQL Stego">
-    <meta property="og:description" content="Hide SQL code inside images">
-    <meta property="og:image" content="og-image.png">
-    <meta property="og:url" content="https://yourusername.github.io/repo/">
+    <title>SQL-in-image - Hide SQL Code in Images</title>
+    <meta name="description" content="Free online steganography tool to hide SQL code inside PNG images. Windows XP style, no uploads, works in browser.">
+    <meta name="keywords" content="SQL, steganography, hide code, image, LSB, encoder, decoder, sql in image">
+    <meta name="author" content="lucovisa">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SQL-in-image">
+    <meta property="og:title" content="SQL-in-image - Hide SQL Code in Images">
+    <meta property="og:description" content="Steganography tool to hide SQL code inside PNG images. Windows XP style.">
+    <meta property="og:image" content="https://lucovisa.github.io/SQL-in-image/og-image.png">
+    <meta property="og:url" content="https://lucovisa.github.io/SQL-in-image/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SQL-in-image - Hide SQL Code in Images">
+    <meta name="twitter:description" content="Steganography tool to hide SQL code inside PNG images.">
+    <meta name="twitter:image" content="https://lucovisa.github.io/SQL-in-image/og-image.png">
+
     <style>
         :root {
             --bg: #c0c0c0;
@@ -43,7 +55,7 @@
             padding: 0;
         }
         body {
-            background: var(--bg);
+            background: linear-gradient(to bottom, #6ba3d6 0%, #6ba3d6 65%, #4a8c3f 65%, #4a8c3f 100%);
             color: var(--text);
             font-family: Tahoma, Verdana, sans-serif;
             font-size: 14px;
@@ -52,6 +64,12 @@
             align-items: center;
             min-height: 100vh;
             padding: 10px;
+        }
+        [data-theme="dark"] body {
+            background: #202020;
+        }
+        [data-theme="ocean"] body {
+            background: #b0d0e0;
         }
         .window {
             width: 100%;
@@ -189,8 +207,43 @@
             padding: 20px;
             border: 2px solid;
             border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
-            width: 300px;
+            width: 380px;
             text-align: center;
+        }
+        .donate-address {
+            margin: 10px 0;
+            text-align: left;
+        }
+        .donate-address label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .address-row {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .address-row input {
+            flex: 1;
+            padding: 5px;
+            border: 2px inset;
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+            background: var(--bg);
+            color: var(--text);
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+        .copy-btn {
+            padding: 5px 10px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .copy-btn:active {
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
     </style>
 </head>
@@ -236,12 +289,40 @@
             </div>
         </div>
     </div>
+
     <div class="modal" id="donateModal">
         <div class="modal-content">
-            <p>Donate feature coming soon!</p>
-            <button class="btn" id="closeModal">Close</button>
+            <h3>Donate</h3>
+            <p>Support the project by sending crypto:</p>
+
+            <div class="donate-address">
+                <label>ETH/USDT (ERC-20)</label>
+                <div class="address-row">
+                    <input type="text" value="0xFa78966938743C9168abFC2acD6D7751d7dA35Cf" readonly>
+                    <button class="copy-btn">Copy</button>
+                </div>
+            </div>
+
+            <div class="donate-address">
+                <label>BTC (Bitcoin mainnet)</label>
+                <div class="address-row">
+                    <input type="text" value="bc1q60tvcsw4guyhxa5e3n47eqmj0s3lpxzkxldpvp" readonly>
+                    <button class="copy-btn">Copy</button>
+                </div>
+            </div>
+
+            <div class="donate-address">
+                <label>TON/USDT (The Open Network)</label>
+                <div class="address-row">
+                    <input type="text" value="UQDsZ_8MkBtjjp-pVa5Fefdg1jtJApOZ7oeFF3WBlLnwQcHF" readonly>
+                    <button class="copy-btn">Copy</button>
+                </div>
+            </div>
+
+            <button class="btn" id="closeModal" style="margin-top:15px;">OK</button>
         </div>
     </div>
+
     <script>
         const themeSelect = document.getElementById('themeSelect');
         themeSelect.addEventListener('change', (e) => {
@@ -267,6 +348,23 @@
         closeModal.addEventListener('click', () => donateModal.style.display = 'none');
         donateModal.addEventListener('click', (e) => {
             if (e.target === donateModal) donateModal.style.display = 'none';
+        });
+
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const input = e.target.closest('.address-row').querySelector('input');
+                const text = input.value;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy', 1500);
+                } catch (err) {
+                    input.select();
+                    document.execCommand('copy');
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy', 1500);
+                }
+            });
         });
 
         function getImageDataFromCanvas(canvas) {

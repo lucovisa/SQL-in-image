@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Stego</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta property="og:title" content="SQL Stego">
+    <meta property="og:description" content="Hide SQL code inside images">
+    <meta property="og:image" content="og-image.png">
+    <meta property="og:url" content="https://yourusername.github.io/repo/">
+    <style>
+        :root {
+            --bg: #c0c0c0;
+            --surface: #dfdfdf;
+            --shadow-light: #ffffff;
+            --shadow-dark: #808080;
+            --text: #000000;
+            --accent: #000080;
+            --accent-text: #ffffff;
+        }
+        [data-theme="dark"] {
+            --bg: #202020;
+            --surface: #303030;
+            --shadow-light: #505050;
+            --shadow-dark: #101010;
+            --text: #e0e0e0;
+            --accent: #404080;
+            --accent-text: #ffffff;
+        }
+        [data-theme="ocean"] {
+            --bg: #b0d0e0;
+            --surface: #c0e0f0;
+            --shadow-light: #e0f0ff;
+            --shadow-dark: #7090a0;
+            --text: #002030;
+            --accent: #004060;
+            --accent-text: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Tahoma, Verdana, sans-serif;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .window {
+            width: 100%;
+            max-width: 900px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .title-bar {
+            background: var(--accent);
+            color: var(--accent-text);
+            padding: 5px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .title-bar span {
+            pointer-events: none;
+        }
+        .menu-bar {
+            display: flex;
+            gap: 10px;
+            padding: 5px;
+            border-bottom: 2px solid var(--shadow-dark);
+            background: var(--surface);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .menu-bar select,
+        .menu-bar button {
+            font-family: inherit;
+            font-size: 12px;
+            padding: 3px 8px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            cursor: pointer;
+            color: var(--text);
+        }
+        .menu-bar button:active {
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+        }
+        .content {
+            padding: 15px;
+            flex: 1;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 6px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            resize: vertical;
+            padding: 5px;
+            font-family: Consolas, monospace;
+            background: var(--bg);
+            color: var(--text);
+            border: 2px inset;
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        .drag-drop {
+            border: 2px dashed var(--shadow-dark);
+            background: var(--bg);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .drag-drop.dragover {
+            border-color: var(--accent);
+            background: var(--shadow-light);
+        }
+        .btn {
+            padding: 6px 12px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--text);
+        }
+        .btn:active {
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+        }
+        .output-area {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .output-area img {
+            max-width: 100%;
+            border: 2px inset;
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: var(--surface);
+            padding: 20px;
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            width: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span>SQL Stego</span>
+            <span>_ □ ×</span>
+        </div>
+        <div class="menu-bar">
+            <label for="theme">Theme:</label>
+            <select id="themeSelect">
+                <option value="classic">Classic</option>
+                <option value="dark">Dark</option>
+                <option value="ocean">Ocean</option>
+            </select>
+            <button id="donateBtn">Donate</button>
+        </div>
+        <div class="content">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="encode">Encode</button>
+                <button class="tab-btn" data-tab="decode">Decode</button>
+            </div>
+            <div class="tab-content active" id="encodeTab">
+                <h3>Hide SQL code in image</h3>
+                <textarea id="sqlInput" placeholder="Paste your SQL code here..."></textarea>
+                <div class="file-input">
+                    <label>Optional cover image:</label>
+                    <input type="file" id="coverImage" accept="image/*">
+                </div>
+                <button class="btn" id="encodeBtn">Encode to Image</button>
+                <div class="output-area" id="encodeOutput"></div>
+            </div>
+            <div class="tab-content" id="decodeTab">
+                <h3>Extract hidden SQL code</h3>
+                <div class="drag-drop" id="dropZone">
+                    Drag & drop image here or click to select
+                </div>
+                <input type="file" id="decodeFile" accept="image/*" style="display:none">
+                <button class="btn" id="decodeBtn">Decode Image</button>
+                <h4>Extracted code:</h4>
+                <textarea id="decodedOutput" readonly></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="donateModal">
+        <div class="modal-content">
+            <p>Donate feature coming soon!</p>
+            <button class="btn" id="closeModal">Close</button>
+        </div>
+    </div>
+    <script>
+        const themeSelect = document.getElementById('themeSelect');
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            document.body.dataset.theme = theme === 'classic' ? '' : theme;
+        });
+
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+
+        const donateBtn = document.getElementById('donateBtn');
+        const donateModal = document.getElementById('donateModal');
+        const closeModal = document.getElementById('closeModal');
+        donateBtn.addEventListener('click', () => donateModal.style.display = 'flex');
+        closeModal.addEventListener('click', () => donateModal.style.display = 'none');
+        donateModal.addEventListener('click', (e) => {
+            if (e.target === donateModal) donateModal.style.display = 'none';
+        });
+
+        function getImageDataFromCanvas(canvas) {
+            const ctx = canvas.getContext('2d');
+            return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        function putImageDataToCanvas(canvas, imageData) {
+            const ctx = canvas.getContext('2d');
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function stringToBytes(str) {
+            return new TextEncoder().encode(str);
+        }
+
+        function bytesToString(bytes) {
+            return new TextDecoder().decode(bytes);
+        }
+
+        function embedData(imageData, bytes) {
+            const data = imageData.data;
+            const capacity = (data.length / 4) * 3;
+            const required = 32 + bytes.length * 8;
+            if (required > capacity) {
+                throw new Error('Image too small to hold the code');
+            }
+            const bitArray = [];
+            for (let i = 0; i < 32; i++) {
+                bitArray.push((bytes.length >>> i) & 1);
+            }
+            for (let byte of bytes) {
+                for (let i = 0; i < 8; i++) {
+                    bitArray.push((byte >>> i) & 1);
+                }
+            }
+            let bitIndex = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                if (bitIndex >= bitArray.length) break;
+                for (let channel = 0; channel < 3; channel++) {
+                    if (bitIndex >= bitArray.length) break;
+                    data[i + channel] = (data[i + channel] & 0xFE) | bitArray[bitIndex];
+                    bitIndex++;
+                }
+            }
+        }
+
+        function extractData(imageData) {
+            const data = imageData.data;
+            const bitArray = [];
+            for (let i = 0; i < data.length; i += 4) {
+                for (let channel = 0; channel < 3; channel++) {
+                    if (bitArray.length < 32 + 8 * 1024 * 1024) {
+                        bitArray.push(data[i + channel] & 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            let length = 0;
+            for (let i = 0; i < 32; i++) {
+                if (bitArray[i]) length |= (1 << i);
+            }
+            if (length <= 0 || length > 1024 * 1024) return null;
+            const bytes = new Uint8Array(length);
+            let byteIndex = 0;
+            let currentByte = 0;
+            let bitCount = 0;
+            for (let i = 32; i < 32 + length * 8; i++) {
+                if (bitArray[i]) currentByte |= (1 << bitCount);
+                bitCount++;
+                if (bitCount === 8) {
+                    bytes[byteIndex] = currentByte;
+                    byteIndex++;
+                    currentByte = 0;
+                    bitCount = 0;
+                }
+            }
+            return bytesToString(bytes);
+        }
+
+        function generateDefaultCover(width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, '#000080');
+            gradient.addColorStop(1, '#008080');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 30px Tahoma';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('SQL STEGO', width/2, height/2);
+            return canvas;
+        }
+
+        const encodeBtn = document.getElementById('encodeBtn');
+        encodeBtn.addEventListener('click', async () => {
+            const sqlCode = document.getElementById('sqlInput').value.trim();
+            if (!sqlCode) {
+                alert('Please enter SQL code');
+                return;
+            }
+            const coverInput = document.getElementById('coverImage');
+            let coverCanvas = null;
+            if (coverInput.files.length > 0) {
+                const file = coverInput.files[0];
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+                coverCanvas = document.createElement('canvas');
+                coverCanvas.width = img.width;
+                coverCanvas.height = img.height;
+                coverCanvas.getContext('2d').drawImage(img, 0, 0);
+                URL.revokeObjectURL(img.src);
+            } else {
+                coverCanvas = generateDefaultCover(600, 400);
+            }
+            const ctx = coverCanvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, coverCanvas.width, coverCanvas.height);
+            const bytes = stringToBytes(sqlCode);
+            try {
+                embedData(imageData, bytes);
+                ctx.putImageData(imageData, 0, 0);
+                const dataUrl = coverCanvas.toDataURL('image/png');
+                const outputDiv = document.getElementById('encodeOutput');
+                outputDiv.innerHTML = `
+                    <img src="${dataUrl}" alt="Encoded image">
+                    <br>
+                    <a href="${dataUrl}" download="encoded.png" class="btn">Download Image</a>
+                `;
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        const dropZone = document.getElementById('dropZone');
+        const decodeFile = document.getElementById('decodeFile');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const decodedOutput = document.getElementById('decodedOutput');
+
+        dropZone.addEventListener('click', () => decodeFile.click());
+        decodeFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                decodeImage(e.target.files[0]);
+            }
+        });
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                decodeImage(e.dataTransfer.files[0]);
+            }
+        });
+        decodeBtn.addEventListener('click', () => {
+            if (decodeFile.files.length > 0) {
+                decodeImage(decodeFile.files[0]);
+            } else {
+                alert('Please select an image first');
+            }
+        });
+
+        async function decodeImage(file) {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const extracted = extractData(imageData);
+            decodedOutput.value = extracted || 'No hidden code found or image not encoded by this tool.';
+            URL.revokeObjectURL(img.src);
+        }
+    </script>
+</body>
+</html>

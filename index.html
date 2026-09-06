@@ -90,7 +90,7 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
-            cursor: default;
+            cursor: pointer;
             user-select: none;
         }
         .desktop-icon img {
@@ -205,6 +205,28 @@
         }
         .tab-content.active {
             display: block;
+        }
+        .tab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tab-header h3 {
+            flex: 1;
+        }
+        .clear-btn {
+            padding: 3px 8px;
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--text);
+        }
+        .clear-btn:active {
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
         textarea {
             width: 100%;
@@ -353,11 +375,15 @@
 </head>
 <body>
     <div class="desktop-icons">
-        <div class="desktop-icon">
+        <div class="desktop-icon" id="myComputerIcon">
             <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='4' y='8' width='40' height='32' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><rect x='4' y='8' width='40' height='6' fill='%23000080'/><rect x='20' y='4' width='8' height='4' fill='%23c0c0c0' stroke='%23606060' stroke-width='1'/></svg>" alt="My Computer">
             <span>My Computer</span>
         </div>
-        <div class="desktop-icon">
+        <div class="desktop-icon" id="folderIcon">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='4' y='10' width='40' height='34' fill='%23f0c800' stroke='%23606060' stroke-width='2'/><rect x='4' y='10' width='16' height='6' fill='%23f0c800' stroke='%23606060' stroke-width='2'/></svg>" alt="Folder">
+            <span>Folder</span>
+        </div>
+        <div class="desktop-icon" id="recycleBinIcon">
             <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='10' y='4' width='28' height='40' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><rect x='14' y='10' width='20' height='4' fill='%23000080'/><rect x='14' y='18' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='24' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='30' width='12' height='3' fill='%23c0c0c0'/></svg>" alt="Recycle Bin">
             <span>Recycle Bin</span>
         </div>
@@ -387,7 +413,10 @@
                 <button class="tab-btn" data-tab="decode">Decode</button>
             </div>
             <div class="tab-content active" id="encodeTab">
-                <h3>Hide SQL code in image</h3>
+                <div class="tab-header">
+                    <h3>Hide SQL code in image</h3>
+                    <button class="clear-btn" id="clearEncode">Clear</button>
+                </div>
                 <textarea id="sqlInput" placeholder="Paste your SQL code here..."></textarea>
                 <div class="file-input">
                     <label>Optional cover image (drag & drop or click):</label>
@@ -398,10 +427,14 @@
                     </div>
                 </div>
                 <button class="btn" id="encodeBtn">Encode to Image</button>
+                <button class="btn" id="createBtn">Create Image</button>
                 <div class="output-area" id="encodeOutput"></div>
             </div>
             <div class="tab-content" id="decodeTab">
-                <h3>Extract hidden code from image</h3>
+                <div class="tab-header">
+                    <h3>Extract hidden code from image</h3>
+                    <button class="clear-btn" id="clearDecode">Clear</button>
+                </div>
                 <div class="drag-drop" id="dropZone">
                     <span>Drag & drop image here or click to select</span>
                     <img id="decodePreview" style="display:none;" alt="Drop preview">
@@ -409,6 +442,7 @@
                 <input type="file" id="decodeFile" accept="image/*" style="display:none">
                 <button class="btn" id="decodeBtn">Decode Image</button>
                 <button class="btn" id="decodeSqlBtn">Decode SQL</button>
+                <button class="btn" id="createDecodeBtn">Create Image</button>
                 <h4>Extracted code:</h4>
                 <textarea id="decodedOutput" readonly></textarea>
             </div>
@@ -458,6 +492,18 @@
         themeSelect.addEventListener('change', (e) => {
             const theme = e.target.value;
             document.body.dataset.theme = theme === 'classic' ? '' : theme;
+        });
+
+        document.getElementById('myComputerIcon').addEventListener('click', () => {
+            window.open('https://github.com/lucovisa', '_blank');
+        });
+
+        document.getElementById('folderIcon').addEventListener('click', () => {
+            location.reload();
+        });
+
+        document.getElementById('recycleBinIcon').addEventListener('click', () => {
+            alert('Recycle Bin');
         });
 
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -625,9 +671,11 @@
         }
 
         const encodeBtn = document.getElementById('encodeBtn');
+        const createBtn = document.getElementById('createBtn');
         const coverImage = document.getElementById('coverImage');
         const encodeDropZone = document.getElementById('encodeDropZone');
         const encodePreview = document.getElementById('encodePreview');
+        const clearEncode = document.getElementById('clearEncode');
         let selectedCoverFile = null;
 
         encodeDropZone.addEventListener('click', () => coverImage.click());
@@ -659,6 +707,26 @@
             };
             reader.readAsDataURL(file);
         }
+
+        clearEncode.addEventListener('click', () => {
+            document.getElementById('sqlInput').value = '';
+            selectedCoverFile = null;
+            encodePreview.style.display = 'none';
+            encodePreview.src = '';
+            coverImage.value = '';
+            document.getElementById('encodeOutput').innerHTML = '';
+        });
+
+        createBtn.addEventListener('click', () => {
+            const canvas = generateDefaultCover(600, 400);
+            const dataUrl = canvas.toDataURL('image/png');
+            const outputDiv = document.getElementById('encodeOutput');
+            outputDiv.innerHTML = `
+                <img src="${dataUrl}" alt="Created image">
+                <br>
+                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
+            `;
+        });
 
         encodeBtn.addEventListener('click', async () => {
             const sqlCode = document.getElementById('sqlInput').value.trim();
@@ -704,10 +772,13 @@
         const decodeFile = document.getElementById('decodeFile');
         const decodeBtn = document.getElementById('decodeBtn');
         const decodeSqlBtn = document.getElementById('decodeSqlBtn');
+        const createDecodeBtn = document.getElementById('createDecodeBtn');
         const decodedOutput = document.getElementById('decodedOutput');
         const decodePreview = document.getElementById('decodePreview');
+        const clearDecode = document.getElementById('clearDecode');
 
         let currentImageData = null;
+        let currentImageBase64 = null;
 
         dropZone.addEventListener('click', () => decodeFile.click());
         dropZone.addEventListener('dragover', (e) => {
@@ -729,39 +800,49 @@
         });
 
         async function loadImage(file) {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-            });
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            decodePreview.src = URL.createObjectURL(file);
-            decodePreview.style.display = 'block';
-            URL.revokeObjectURL(img.src);
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                currentImageBase64 = e.target.result;
+                const img = new Image();
+                img.src = e.target.result;
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                decodePreview.src = e.target.result;
+                decodePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         }
 
+        clearDecode.addEventListener('click', () => {
+            currentImageData = null;
+            currentImageBase64 = null;
+            decodePreview.style.display = 'none';
+            decodePreview.src = '';
+            decodeFile.value = '';
+            decodedOutput.value = '';
+        });
+
+        createDecodeBtn.addEventListener('click', () => {
+            const canvas = generateDefaultCover(600, 400);
+            const dataUrl = canvas.toDataURL('image/png');
+            decodedOutput.value = dataUrl;
+        });
+
         decodeBtn.addEventListener('click', () => {
-            if (!currentImageData) {
+            if (!currentImageBase64) {
                 alert('Please select an image first');
                 return;
             }
-            const w = currentImageData.width;
-            const h = currentImageData.height;
-            const data = currentImageData.data;
-            const pixelCount = w * h;
-            const firstPixels = [];
-            for (let i = 0; i < Math.min(10, pixelCount); i++) {
-                const idx = i * 4;
-                firstPixels.push(`Pixel ${i}: [${data[idx]}, ${data[idx+1]}, ${data[idx+2]}, ${data[idx+3]}]`);
-            }
-            const result = `Image Information:\n\nWidth: ${w}px\nHeight: ${h}px\nTotal Pixels: ${pixelCount}\nData Length: ${data.length} bytes\n\nFirst 10 Pixels (RGBA):\n${firstPixels.join('\n')}\n\nFull pixel data available in memory.`;
-            decodedOutput.value = result;
+            const base64 = currentImageBase64.split(',')[1];
+            decodedOutput.value = base64;
         });
 
         decodeSqlBtn.addEventListener('click', () => {

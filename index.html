@@ -54,7 +54,12 @@
             padding: 0;
         }
         body {
-            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%236ba3d6"/><rect y="65" width="100" height="35" fill="%234a8c3f"/></svg>') repeat;
+            background-color: #3a6ea5;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%233a6ea5"/><rect y="70" width="100" height="30" fill="%235c8c3c"/></svg>');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             color: var(--text);
             font-family: Tahoma, Verdana, sans-serif;
             font-size: 14px;
@@ -63,12 +68,42 @@
             align-items: center;
             min-height: 100vh;
             padding: 10px;
+            margin: 0;
         }
         [data-theme="dark"] body {
             background: #202020;
         }
         [data-theme="ocean"] body {
             background: #b0d0e0;
+        }
+        .desktop-icons {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 5;
+        }
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: default;
+            user-select: none;
+        }
+        .desktop-icon img {
+            width: 48px;
+            height: 48px;
+            pointer-events: none;
+        }
+        .desktop-icon span {
+            color: white;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px black;
+            text-align: center;
+            max-width: 80px;
         }
         .window {
             width: 100%;
@@ -79,6 +114,9 @@
             box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 10;
+            margin-top: 40px;
         }
         .title-bar {
             background: var(--accent);
@@ -185,14 +223,22 @@
         .drag-drop {
             border: 2px dashed var(--shadow-dark);
             background: var(--bg);
-            padding: 30px;
+            padding: 25px;
             text-align: center;
             cursor: pointer;
             margin: 10px 0;
+            transition: background 0.2s;
         }
         .drag-drop.dragover {
             border-color: var(--accent);
             background: var(--shadow-light);
+        }
+        .drag-drop img {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            border: 2px inset;
+            border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
         .btn {
             padding: 6px 12px;
@@ -202,6 +248,7 @@
             cursor: pointer;
             font-family: inherit;
             color: var(--text);
+            margin: 2px;
         }
         .btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -219,10 +266,8 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
             z-index: 100;
+            pointer-events: none;
         }
         .modal-window {
             background: var(--surface);
@@ -230,7 +275,11 @@
             border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
             box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
             width: 420px;
-            position: relative;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
         }
         .modal-title-bar {
             background: var(--accent);
@@ -281,9 +330,39 @@
         .copy-btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+                align-items: flex-start;
+            }
+            .window {
+                margin-top: 90px;
+            }
+            .modal-window {
+                width: 95%;
+            }
+            .desktop-icon img {
+                width: 36px;
+                height: 36px;
+            }
+            .desktop-icon span {
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="desktop-icons">
+        <div class="desktop-icon">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='4' y='8' width='40' height='32' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><rect x='4' y='8' width='40' height='6' fill='%23000080'/><rect x='20' y='4' width='8' height='4' fill='%23c0c0c0' stroke='%23606060' stroke-width='1'/></svg>" alt="My Computer">
+            <span>My Computer</span>
+        </div>
+        <div class="desktop-icon">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='10' y='4' width='28' height='40' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><rect x='14' y='10' width='20' height='4' fill='%23000080'/><rect x='14' y='18' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='24' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='30' width='12' height='3' fill='%23c0c0c0'/></svg>" alt="Recycle Bin">
+            <span>Recycle Bin</span>
+        </div>
+    </div>
+
     <div class="window">
         <div class="title-bar">
             <span>SQL image</span>
@@ -311,8 +390,12 @@
                 <h3>Hide SQL code in image</h3>
                 <textarea id="sqlInput" placeholder="Paste your SQL code here..."></textarea>
                 <div class="file-input">
-                    <label>Optional cover image:</label>
-                    <input type="file" id="coverImage" accept="image/*">
+                    <label>Optional cover image (drag & drop or click):</label>
+                    <div class="drag-drop" id="encodeDropZone">
+                        <span>Drag & drop image here or click to select</span>
+                        <img id="encodePreview" style="display:none;" alt="Cover preview">
+                        <input type="file" id="coverImage" accept="image/*" style="display:none;">
+                    </div>
                 </div>
                 <button class="btn" id="encodeBtn">Encode to Image</button>
                 <div class="output-area" id="encodeOutput"></div>
@@ -320,7 +403,8 @@
             <div class="tab-content" id="decodeTab">
                 <h3>Extract hidden code from image</h3>
                 <div class="drag-drop" id="dropZone">
-                    Drag & drop image here or click to select
+                    <span>Drag & drop image here or click to select</span>
+                    <img id="decodePreview" style="display:none;" alt="Drop preview">
                 </div>
                 <input type="file" id="decodeFile" accept="image/*" style="display:none">
                 <button class="btn" id="decodeBtn">Decode Image</button>
@@ -393,7 +477,7 @@
         const closeModalOk = document.getElementById('closeModalOk');
 
         function openDonate() {
-            donateModal.style.display = 'flex';
+            donateModal.style.display = 'block';
         }
         function closeDonate() {
             donateModal.style.display = 'none';
@@ -401,31 +485,25 @@
         donateBtn.addEventListener('click', openDonate);
         closeModalBtn.addEventListener('click', closeDonate);
         closeModalOk.addEventListener('click', closeDonate);
-        donateModal.addEventListener('click', (e) => {
-            if (e.target === donateModal) closeDonate();
-        });
 
         const modalWindow = document.querySelector('.modal-window');
         const modalTitleBar = document.getElementById('modalTitleBar');
         let isDragging = false;
-        let startX, startY, initialX, initialY;
+        let dragOffsetX, dragOffsetY;
 
         modalTitleBar.addEventListener('mousedown', (e) => {
             isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            initialX = modalWindow.offsetLeft;
-            initialY = modalWindow.offsetTop;
+            const rect = modalWindow.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            modalWindow.style.transform = 'none';
             e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            modalWindow.style.position = 'absolute';
-            modalWindow.style.left = initialX + dx + 'px';
-            modalWindow.style.top = initialY + dy + 'px';
+            modalWindow.style.left = e.clientX - dragOffsetX + 'px';
+            modalWindow.style.top = e.clientY - dragOffsetY + 'px';
         });
 
         document.addEventListener('mouseup', () => {
@@ -547,18 +625,51 @@
         }
 
         const encodeBtn = document.getElementById('encodeBtn');
+        const coverImage = document.getElementById('coverImage');
+        const encodeDropZone = document.getElementById('encodeDropZone');
+        const encodePreview = document.getElementById('encodePreview');
+        let selectedCoverFile = null;
+
+        encodeDropZone.addEventListener('click', () => coverImage.click());
+        encodeDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            encodeDropZone.classList.add('dragover');
+        });
+        encodeDropZone.addEventListener('dragleave', () => encodeDropZone.classList.remove('dragover'));
+        encodeDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            encodeDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                selectedCoverFile = e.dataTransfer.files[0];
+                showCoverPreview(selectedCoverFile);
+            }
+        });
+        coverImage.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedCoverFile = e.target.files[0];
+                showCoverPreview(selectedCoverFile);
+            }
+        });
+
+        function showCoverPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                encodePreview.src = e.target.result;
+                encodePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
         encodeBtn.addEventListener('click', async () => {
             const sqlCode = document.getElementById('sqlInput').value.trim();
             if (!sqlCode) {
                 alert('Please enter SQL code');
                 return;
             }
-            const coverInput = document.getElementById('coverImage');
             let coverCanvas = null;
-            if (coverInput.files.length > 0) {
-                const file = coverInput.files[0];
+            if (selectedCoverFile) {
                 const img = new Image();
-                img.src = URL.createObjectURL(file);
+                img.src = URL.createObjectURL(selectedCoverFile);
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;
@@ -594,15 +705,11 @@
         const decodeBtn = document.getElementById('decodeBtn');
         const decodeSqlBtn = document.getElementById('decodeSqlBtn');
         const decodedOutput = document.getElementById('decodedOutput');
+        const decodePreview = document.getElementById('decodePreview');
 
         let currentImageData = null;
 
         dropZone.addEventListener('click', () => decodeFile.click());
-        decodeFile.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                loadImage(e.target.files[0]);
-            }
-        });
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
@@ -613,6 +720,11 @@
             dropZone.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
                 loadImage(e.dataTransfer.files[0]);
+            }
+        });
+        decodeFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
             }
         });
 
@@ -629,6 +741,8 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            decodePreview.src = URL.createObjectURL(file);
+            decodePreview.style.display = 'block';
             URL.revokeObjectURL(img.src);
         }
 
@@ -637,7 +751,17 @@
                 alert('Please select an image first');
                 return;
             }
-            decodedOutput.value = 'Image loaded successfully. Click "Decode SQL" to extract hidden code.';
+            const w = currentImageData.width;
+            const h = currentImageData.height;
+            const data = currentImageData.data;
+            const pixelCount = w * h;
+            const firstPixels = [];
+            for (let i = 0; i < Math.min(10, pixelCount); i++) {
+                const idx = i * 4;
+                firstPixels.push(`Pixel ${i}: [${data[idx]}, ${data[idx+1]}, ${data[idx+2]}, ${data[idx+3]}]`);
+            }
+            const result = `Image Information:\n\nWidth: ${w}px\nHeight: ${h}px\nTotal Pixels: ${pixelCount}\nData Length: ${data.length} bytes\n\nFirst 10 Pixels (RGBA):\n${firstPixels.join('\n')}\n\nFull pixel data available in memory.`;
+            decodedOutput.value = result;
         });
 
         decodeSqlBtn.addEventListener('click', () => {

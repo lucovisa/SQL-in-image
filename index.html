@@ -413,14 +413,14 @@
             <span>Folder</span>
         </div>
         <div class="desktop-icon" id="recycleBinIcon">
-            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='10' y='4' width='28' height='40' fill='%23f0f0f0' stroke='%23606060' stroke-width='2'/><rect x='14' y='10' width='20' height='4' fill='%23000080'/><rect x='14' y='18' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='24' width='20' height='3' fill='%23c0c0c0'/><rect x='14' y='30' width='12' height='3' fill='%23c0c0c0'/></svg>" alt="Recycle Bin">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><rect x='8' y='8' width='32' height='34' fill='%23f0f0f0' stroke='%23606060' stroke-width='2' rx='3'/><rect x='6' y='4' width='36' height='6' fill='%23c0c0c0' stroke='%23606060' stroke-width='2' rx='2'/><rect x='14' y='14' width='5' height='3' fill='%23c0c0c0'/><rect x='21' y='14' width='5' height='3' fill='%23c0c0c0'/><rect x='28' y='14' width='5' height='3' fill='%23c0c0c0'/><circle cx='24' cy='26' r='8' fill='none' stroke='%23606060' stroke-width='1.5'/><circle cx='24' cy='26' r='5' fill='none' stroke='%23606060' stroke-width='1'/></svg>" alt="Recycle Bin">
             <span>Recycle Bin</span>
         </div>
     </div>
 
     <div class="window">
         <div class="title-bar">
-            <span>SQL image</span>
+            <span>Text to Image</span>
             <div class="title-bar-buttons">
                 <button class="title-btn">_</button>
                 <button class="title-btn">□</button>
@@ -438,16 +438,16 @@
         </div>
         <div class="content">
             <div class="tabs">
-                <button class="tab-btn active" data-tab="encode">Encode</button>
+                <button class="tab-btn active" data-tab="encode">Text to Image</button>
                 <button class="tab-btn" data-tab="create">Create Image</button>
                 <button class="tab-btn" data-tab="decode">Decode</button>
             </div>
             <div class="tab-content active" id="encodeTab">
                 <div class="tab-header">
-                    <h3>Hide SQL code in image</h3>
+                    <h3>Hide your code/text in image</h3>
                     <button class="clear-btn" id="clearEncode">Clear</button>
                 </div>
-                <textarea id="sqlInput" placeholder="Paste your SQL code here..."></textarea>
+                <textarea id="sqlInput" placeholder="Paste your code or text here..."></textarea>
                 <div class="file-input">
                     <label>Optional cover image (drag & drop or click):</label>
                     <div class="drag-drop" id="encodeDropZone">
@@ -489,7 +489,7 @@
     <div class="modal" id="donateModal">
         <div class="modal-window">
             <div class="modal-title-bar" id="modalTitleBar">
-                <span>❤️ Donate</span>
+                <span>Donate</span>
                 <div class="title-bar-buttons">
                     <button class="title-btn">_</button>
                     <button class="title-btn">□</button>
@@ -527,7 +527,7 @@
     <div class="alert-modal" id="alertModal">
         <div class="alert-window">
             <div class="modal-title-bar">
-                <span>SQL image</span>
+                <span>Text to Image</span>
                 <div class="title-bar-buttons">
                     <button class="title-btn close" id="closeAlertBtn">×</button>
                 </div>
@@ -786,7 +786,7 @@
         encodeBtn.addEventListener('click', async () => {
             const sqlCode = document.getElementById('sqlInput').value.trim();
             if (!sqlCode) {
-                showAlert('Please enter SQL code first');
+                showAlert('Please enter code first');
                 return;
             }
             let coverCanvas = null;
@@ -813,11 +813,7 @@
                 ctx.putImageData(imageData, 0, 0);
                 const dataUrl = coverCanvas.toDataURL('image/png');
                 const outputDiv = document.getElementById('encodeOutput');
-                outputDiv.innerHTML = `
-                    <img src="${dataUrl}" alt="Encoded image">
-                    <br>
-                    <a href="${dataUrl}" download="encoded.png" class="btn">Download Image</a>
-                `;
+                outputDiv.innerHTML = `<a href="${dataUrl}" download="encoded.png" class="btn">Download Image</a>`;
             } catch (err) {
                 showAlert(err.message);
             }
@@ -839,24 +835,22 @@
                 showAlert('Please enter data first');
                 return;
             }
-            const canvas = generateDefaultCover(600, 400);
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 400;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, 600, 400);
             ctx.fillStyle = '#000080';
             ctx.font = 'bold 16px Tahoma';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
             const lines = inputData.split('\n').slice(0, 20);
             lines.forEach((line, index) => {
-                ctx.fillText(line.substring(0, 60), 300, 30 + index * 18);
+                ctx.fillText(line.substring(0, 80), 20, 20 + index * 18);
             });
             const dataUrl = canvas.toDataURL('image/png');
-            createOutput.innerHTML = `
-                <img src="${dataUrl}" alt="Created image">
-                <br>
-                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
-            `;
+            createOutput.innerHTML = `<a href="${dataUrl}" download="created.png" class="btn">Download Image</a>`;
         });
 
         const dropZone = document.getElementById('dropZone');

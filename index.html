@@ -278,6 +278,7 @@
             font-family: inherit;
             font-size: 12px;
             color: var(--text);
+            margin: 2px;
         }
         .clear-btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -537,7 +538,10 @@
             <div class="tab-content active" id="encodeTab">
                 <div class="tab-header">
                     <h3>Hide your code/text in image</h3>
-                    <button class="clear-btn" id="clearEncodeText">Clear Text</button>
+                    <div>
+                        <button class="clear-btn" id="clearEncodeText">Clear Text</button>
+                        <button class="clear-btn" id="clearEncodeImage">Clear Image</button>
+                    </div>
                 </div>
                 <textarea id="sqlInput" placeholder="Paste your code or text here..."></textarea>
                 <button class="btn" id="copySqlInput">Copy</button>
@@ -565,7 +569,10 @@
             <div class="tab-content" id="decodeTab">
                 <div class="tab-header">
                     <h3>Extract hidden code from image</h3>
-                    <button class="clear-btn" id="clearDecodeText">Clear Text</button>
+                    <div>
+                        <button class="clear-btn" id="clearDecodeText">Clear Text</button>
+                        <button class="clear-btn" id="clearDecodeImage">Clear Image</button>
+                    </div>
                 </div>
                 <div class="drag-drop" id="dropZone">
                     <span>Drag & drop image here or click to select</span>
@@ -817,6 +824,10 @@
         closeAlertBtn.addEventListener('click', closeAlert);
         closeAlertOk.addEventListener('click', closeAlert);
 
+        function isImageFile(file) {
+            return file.type.startsWith('image/');
+        }
+
         function getImageDataFromCanvas(canvas) {
             const ctx = canvas.getContext('2d');
             return ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -916,6 +927,7 @@
         const encodeDropZone = document.getElementById('encodeDropZone');
         const encodePreview = document.getElementById('encodePreview');
         const clearEncodeText = document.getElementById('clearEncodeText');
+        const clearEncodeImage = document.getElementById('clearEncodeImage');
         let selectedCoverFile = null;
 
         encodeDropZone.addEventListener('click', () => coverImage.click());
@@ -928,14 +940,24 @@
             e.preventDefault();
             encodeDropZone.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
-                selectedCoverFile = e.dataTransfer.files[0];
-                showCoverPreview(selectedCoverFile);
+                const file = e.dataTransfer.files[0];
+                if (isImageFile(file)) {
+                    selectedCoverFile = file;
+                    showCoverPreview(selectedCoverFile);
+                } else {
+                    showAlert('Please drop an image file only');
+                }
             }
         });
         coverImage.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                selectedCoverFile = e.target.files[0];
-                showCoverPreview(selectedCoverFile);
+                const file = e.target.files[0];
+                if (isImageFile(file)) {
+                    selectedCoverFile = file;
+                    showCoverPreview(selectedCoverFile);
+                } else {
+                    showAlert('Please select an image file only');
+                }
             }
         });
 
@@ -952,6 +974,13 @@
 
         clearEncodeText.addEventListener('click', () => {
             document.getElementById('sqlInput').value = '';
+        });
+
+        clearEncodeImage.addEventListener('click', () => {
+            selectedCoverFile = null;
+            encodePreview.style.display = 'none';
+            encodePreview.src = '';
+            coverImage.value = '';
         });
 
         encodeBtn.addEventListener('click', async () => {
@@ -1030,6 +1059,7 @@
         const decodedOutput = document.getElementById('decodedOutput');
         const decodePreview = document.getElementById('decodePreview');
         const clearDecodeText = document.getElementById('clearDecodeText');
+        const clearDecodeImage = document.getElementById('clearDecodeImage');
 
         let currentImageData = null;
         let currentImageBase64 = null;
@@ -1044,12 +1074,22 @@
             e.preventDefault();
             dropZone.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
-                loadImage(e.dataTransfer.files[0]);
+                const file = e.dataTransfer.files[0];
+                if (isImageFile(file)) {
+                    loadImage(file);
+                } else {
+                    showAlert('Please drop an image file only');
+                }
             }
         });
         decodeFile.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                loadImage(e.target.files[0]);
+                const file = e.target.files[0];
+                if (isImageFile(file)) {
+                    loadImage(file);
+                } else {
+                    showAlert('Please select an image file only');
+                }
             }
         });
 
@@ -1079,6 +1119,14 @@
 
         clearDecodeText.addEventListener('click', () => {
             decodedOutput.value = '';
+        });
+
+        clearDecodeImage.addEventListener('click', () => {
+            currentImageData = null;
+            currentImageBase64 = null;
+            decodePreview.style.display = 'none';
+            decodePreview.src = '';
+            decodeFile.value = '';
         });
 
         decodeBtn.addEventListener('click', () => {

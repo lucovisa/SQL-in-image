@@ -126,11 +126,17 @@
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            cursor: default;
+            cursor: move;
+            user-select: none;
+        }
+        .title-bar > span:first-child {
+            pointer-events: none;
+            flex: 1;
         }
         .title-bar-buttons {
             display: flex;
             gap: 3px;
+            pointer-events: auto;
         }
         .title-btn {
             width: 20px;
@@ -432,8 +438,8 @@
         </div>
     </div>
 
-    <div class="window">
-        <div class="title-bar">
+    <div class="window" id="mainWindow">
+        <div class="title-bar" id="mainTitleBar">
             <span>Text to Image</span>
             <div class="title-bar-buttons">
                 <button class="title-btn">_</button>
@@ -462,6 +468,7 @@
                     <button class="clear-btn" id="clearEncode">Clear</button>
                 </div>
                 <textarea id="sqlInput" placeholder="Paste your code or text here..."></textarea>
+                <button class="btn" id="copySqlInput">Copy</button>
                 <div class="file-input">
                     <label>Optional cover image (drag & drop or click):</label>
                     <div class="drag-drop" id="encodeDropZone">
@@ -475,10 +482,11 @@
             </div>
             <div class="tab-content" id="createTab">
                 <div class="tab-header">
-                    <h3>Create image from code</h3>
+                    <h3>Create image from base64 code</h3>
                     <button class="clear-btn" id="clearCreate">Clear</button>
                 </div>
-                <textarea id="createInput" placeholder="Paste your code or data here..."></textarea>
+                <textarea id="createInput" placeholder="Paste base64 image code here..."></textarea>
+                <button class="btn" id="copyCreateInput">Copy</button>
                 <button class="btn" id="createImageBtn">Create Image</button>
                 <div class="output-area" id="createOutput"></div>
             </div>
@@ -573,6 +581,34 @@
             location.reload();
         });
 
+        const mainWindow = document.getElementById('mainWindow');
+        const mainTitleBar = document.getElementById('mainTitleBar');
+        let isMainDragging = false;
+        let mainDragOffsetX, mainDragOffsetY;
+
+        mainTitleBar.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.title-btn')) return;
+            isMainDragging = true;
+            const rect = mainWindow.getBoundingClientRect();
+            mainDragOffsetX = e.clientX - rect.left;
+            mainDragOffsetY = e.clientY - rect.top;
+            mainWindow.style.position = 'fixed';
+            mainWindow.style.left = rect.left + 'px';
+            mainWindow.style.top = rect.top + 'px';
+            mainWindow.style.marginTop = '0';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isMainDragging) return;
+            mainWindow.style.left = e.clientX - mainDragOffsetX + 'px';
+            mainWindow.style.top = e.clientY - mainDragOffsetY + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isMainDragging = false;
+        });
+
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
         tabBtns.forEach(btn => {
@@ -641,22 +677,29 @@
             });
         });
 
-        const copyDecodedBtn = document.getElementById('copyDecodedBtn');
-        copyDecodedBtn.addEventListener('click', () => {
-            const decodedText = document.getElementById('decodedOutput').value;
-            if (!decodedText) {
+        function copyText(text, btn) {
+            if (!text) {
                 showAlert('Nothing to copy');
                 return;
             }
-            navigator.clipboard.writeText(decodedText).then(() => {
-                copyDecodedBtn.textContent = 'Copied!';
-                setTimeout(() => copyDecodedBtn.textContent = 'Copy', 1500);
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 1500);
             }).catch(() => {
-                document.getElementById('decodedOutput').select();
-                document.execCommand('copy');
-                copyDecodedBtn.textContent = 'Copied!';
-                setTimeout(() => copyDecodedBtn.textContent = 'Copy', 1500);
+                showAlert('Failed to copy');
             });
+        }
+
+        document.getElementById('copySqlInput').addEventListener('click', (e) => {
+            copyText(document.getElementById('sqlInput').value, e.target);
+        });
+
+        document.getElementById('copyCreateInput').addEventListener('click', (e) => {
+            copyText(document.getElementById('createInput').value, e.target);
+        });
+
+        document.getElementById('copyDecodedBtn').addEventListener('click', (e) => {
+            copyText(document.getElementById('decodedOutput').value, e.target);
         });
 
         const alertModal = document.getElementById('alertModal');
@@ -864,34 +907,23 @@
         });
 
         createImageBtn.addEventListener('click', () => {
-            const inputData = createInput.value.trim();
-            if (!inputData) {
-                showAlert('Please enter data first');
+            const base64Data = createInput.value.trim();
+            if (!base64Data) {
+                showAlert('Please enter base64 image code first');
                 return;
             }
-            const canvas = document.createElement('canvas');
-            canvas.width = 600;
-            canvas.height = 400;
-            const ctx = canvas.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 600, 400);
-            gradient.addColorStop(0, '#000080');
-            gradient.addColorStop(1, '#008080');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 600, 400);
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 20px Tahoma';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            const lines = inputData.split('\n').slice(0, 15);
-            lines.forEach((line, index) => {
-                ctx.fillText(line.substring(0, 50), 300, 100 + index * 20);
-            });
-            const dataUrl = canvas.toDataURL('image/png');
-            createOutput.innerHTML = `
-                <img src="${dataUrl}" alt="Created image" style="max-width:100%;">
-                <br>
-                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
-            `;
+            const img = new Image();
+            img.onload = () => {
+                createOutput.innerHTML = `
+                    <img src="${base64Data}" alt="Created image" style="max-width:100%;">
+                    <br>
+                    <a href="${base64Data}" download="created.png" class="btn">Download Image</a>
+                `;
+            };
+            img.onerror = () => {
+                showAlert('Invalid base64 image code');
+            };
+            img.src = base64Data;
         });
 
         const dropZone = document.getElementById('dropZone');

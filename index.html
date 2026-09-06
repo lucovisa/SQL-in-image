@@ -352,6 +352,32 @@
         .copy-btn:active {
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
         }
+        .alert-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 200;
+            pointer-events: none;
+        }
+        .alert-window {
+            background: var(--surface);
+            border: 2px solid;
+            border-color: var(--shadow-light) var(--shadow-dark) var(--shadow-dark) var(--shadow-light);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            width: 350px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+        }
+        .alert-content {
+            padding: 20px;
+            text-align: center;
+        }
+        .alert-content p {
+            margin-bottom: 15px;
+        }
         @media (max-width: 600px) {
             body {
                 padding: 5px;
@@ -362,6 +388,9 @@
             }
             .modal-window {
                 width: 95%;
+            }
+            .alert-window {
+                width: 90%;
             }
             .desktop-icon img {
                 width: 36px;
@@ -427,7 +456,7 @@
                     </div>
                 </div>
                 <button class="btn" id="encodeBtn">Encode to Image</button>
-                <button class="btn" id="createBtn">Create Image</button>
+                <button class="btn" id="createEncodeBtn">Create Image</button>
                 <div class="output-area" id="encodeOutput"></div>
             </div>
             <div class="tab-content" id="decodeTab">
@@ -487,6 +516,21 @@
         </div>
     </div>
 
+    <div class="alert-modal" id="alertModal">
+        <div class="alert-window">
+            <div class="modal-title-bar">
+                <span>SQL image</span>
+                <div class="title-bar-buttons">
+                    <button class="title-btn close" id="closeAlertBtn">×</button>
+                </div>
+            </div>
+            <div class="alert-content">
+                <p id="alertText"></p>
+                <button class="btn" id="closeAlertOk">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const themeSelect = document.getElementById('themeSelect');
         themeSelect.addEventListener('change', (e) => {
@@ -499,11 +543,11 @@
         });
 
         document.getElementById('folderIcon').addEventListener('click', () => {
-            location.reload();
+            window.open('https://github.com/lucovisa/SQL-in-image', '_blank');
         });
 
         document.getElementById('recycleBinIcon').addEventListener('click', () => {
-            alert('Recycle Bin');
+            location.reload();
         });
 
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -572,6 +616,21 @@
                 }
             });
         });
+
+        const alertModal = document.getElementById('alertModal');
+        const alertText = document.getElementById('alertText');
+        const closeAlertBtn = document.getElementById('closeAlertBtn');
+        const closeAlertOk = document.getElementById('closeAlertOk');
+
+        function showAlert(message) {
+            alertText.textContent = message;
+            alertModal.style.display = 'block';
+        }
+        function closeAlert() {
+            alertModal.style.display = 'none';
+        }
+        closeAlertBtn.addEventListener('click', closeAlert);
+        closeAlertOk.addEventListener('click', closeAlert);
 
         function getImageDataFromCanvas(canvas) {
             const ctx = canvas.getContext('2d');
@@ -671,7 +730,7 @@
         }
 
         const encodeBtn = document.getElementById('encodeBtn');
-        const createBtn = document.getElementById('createBtn');
+        const createEncodeBtn = document.getElementById('createEncodeBtn');
         const coverImage = document.getElementById('coverImage');
         const encodeDropZone = document.getElementById('encodeDropZone');
         const encodePreview = document.getElementById('encodePreview');
@@ -717,7 +776,12 @@
             document.getElementById('encodeOutput').innerHTML = '';
         });
 
-        createBtn.addEventListener('click', () => {
+        createEncodeBtn.addEventListener('click', () => {
+            const sqlCode = document.getElementById('sqlInput').value.trim();
+            if (!sqlCode) {
+                showAlert('Please enter SQL code first');
+                return;
+            }
             const canvas = generateDefaultCover(600, 400);
             const dataUrl = canvas.toDataURL('image/png');
             const outputDiv = document.getElementById('encodeOutput');
@@ -731,7 +795,7 @@
         encodeBtn.addEventListener('click', async () => {
             const sqlCode = document.getElementById('sqlInput').value.trim();
             if (!sqlCode) {
-                alert('Please enter SQL code');
+                showAlert('Please enter SQL code first');
                 return;
             }
             let coverCanvas = null;
@@ -764,7 +828,7 @@
                     <a href="${dataUrl}" download="encoded.png" class="btn">Download Image</a>
                 `;
             } catch (err) {
-                alert(err.message);
+                showAlert(err.message);
             }
         });
 
@@ -831,14 +895,22 @@
         });
 
         createDecodeBtn.addEventListener('click', () => {
-            const canvas = generateDefaultCover(600, 400);
+            if (!currentImageData) {
+                showAlert('Please select an image first');
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = currentImageData.width;
+            canvas.height = currentImageData.height;
+            const ctx = canvas.getContext('2d');
+            ctx.putImageData(currentImageData, 0, 0);
             const dataUrl = canvas.toDataURL('image/png');
             decodedOutput.value = dataUrl;
         });
 
         decodeBtn.addEventListener('click', () => {
             if (!currentImageBase64) {
-                alert('Please select an image first');
+                showAlert('Please select an image first');
                 return;
             }
             const base64 = currentImageBase64.split(',')[1];
@@ -847,7 +919,7 @@
 
         decodeSqlBtn.addEventListener('click', () => {
             if (!currentImageData) {
-                alert('Please select an image first');
+                showAlert('Please select an image first');
                 return;
             }
             const extracted = extractData(currentImageData);

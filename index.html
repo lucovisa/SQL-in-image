@@ -51,7 +51,8 @@
             color: #e0e0e0;
         }
         [data-theme="dark"] .title-bar,
-        [data-theme="dark"] .modal-title-bar {
+        [data-theme="dark"] .modal-title-bar,
+        [data-theme="dark"] .alert-title-bar {
             color: #ffffff;
         }
         [data-theme="dark"] .title-btn {
@@ -78,7 +79,13 @@
             color: #002030;
         }
         [data-theme="ocean"] .title-bar,
-        [data-theme="ocean"] .modal-title-bar {
+        [data-theme="ocean"] .modal-title-bar,
+        [data-theme="ocean"] .alert-title-bar {
+            color: #ffffff;
+        }
+        [data-theme="ocean"] .title-bar > span:first-child,
+        [data-theme="ocean"] .modal-title-bar > span:first-child,
+        [data-theme="ocean"] .alert-title-bar > span:first-child {
             color: #ffffff;
         }
         [data-theme="ocean"] .title-btn {
@@ -168,6 +175,7 @@
         .title-bar > span:first-child {
             pointer-events: none;
             flex: 1;
+            color: var(--accent-text);
         }
         .title-bar-buttons {
             display: flex;
@@ -303,8 +311,8 @@
             background: var(--shadow-light);
         }
         .drag-drop img {
-            max-width: 100%;
-            max-height: 200px;
+            max-width: 150px;
+            max-height: 150px;
             margin-top: 10px;
             border: 2px inset;
             border-color: var(--shadow-dark) var(--shadow-light) var(--shadow-light) var(--shadow-dark);
@@ -529,12 +537,12 @@
             <div class="tab-content active" id="encodeTab">
                 <div class="tab-header">
                     <h3>Hide your code/text in image</h3>
-                    <button class="clear-btn" id="clearEncode">Clear</button>
+                    <button class="clear-btn" id="clearEncodeText">Clear Text</button>
                 </div>
                 <textarea id="sqlInput" placeholder="Paste your code or text here..."></textarea>
                 <button class="btn" id="copySqlInput">Copy</button>
                 <div class="file-input">
-                    <label>Optional cover image (drag & drop or click):</label>
+                    <label>Optional cover image (drag & drop or click) - you can skip this:</label>
                     <div class="drag-drop" id="encodeDropZone">
                         <span>Drag & drop image here or click to select</span>
                         <img id="encodePreview" style="display:none;" alt="Cover preview">
@@ -557,7 +565,7 @@
             <div class="tab-content" id="decodeTab">
                 <div class="tab-header">
                     <h3>Extract hidden code from image</h3>
-                    <button class="clear-btn" id="clearDecode">Clear</button>
+                    <button class="clear-btn" id="clearDecodeText">Clear Text</button>
                 </div>
                 <div class="drag-drop" id="dropZone">
                     <span>Drag & drop image here or click to select</span>
@@ -565,7 +573,7 @@
                 </div>
                 <input type="file" id="decodeFile" accept="image/*" style="display:none">
                 <button class="btn" id="decodeBtn">Decode Image</button>
-                <button class="btn" id="decodeSqlBtn">Decode SQL</button>
+                <button class="btn" id="decodeTextBtn">Decode Text</button>
                 <h4>Extracted code:</h4>
                 <textarea id="decodedOutput" readonly></textarea>
                 <button class="btn" id="copyDecodedBtn">Copy</button>
@@ -893,16 +901,13 @@
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, width, height);
-            gradient.addColorStop(0, '#000080');
-            gradient.addColorStop(1, '#008080');
-            ctx.fillStyle = gradient;
+            ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 30px Tahoma';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('SQL STEGO', width/2, height/2);
+            ctx.fillText('LUCOVISA', width/2, height/2);
             return canvas;
         }
 
@@ -910,7 +915,7 @@
         const coverImage = document.getElementById('coverImage');
         const encodeDropZone = document.getElementById('encodeDropZone');
         const encodePreview = document.getElementById('encodePreview');
-        const clearEncode = document.getElementById('clearEncode');
+        const clearEncodeText = document.getElementById('clearEncodeText');
         let selectedCoverFile = null;
 
         encodeDropZone.addEventListener('click', () => coverImage.click());
@@ -945,13 +950,8 @@
             reader.readAsDataURL(file);
         }
 
-        clearEncode.addEventListener('click', () => {
+        clearEncodeText.addEventListener('click', () => {
             document.getElementById('sqlInput').value = '';
-            selectedCoverFile = null;
-            encodePreview.style.display = 'none';
-            encodePreview.src = '';
-            coverImage.value = '';
-            document.getElementById('encodeOutput').innerHTML = '';
         });
 
         encodeBtn.addEventListener('click', async () => {
@@ -1026,10 +1026,10 @@
         const dropZone = document.getElementById('dropZone');
         const decodeFile = document.getElementById('decodeFile');
         const decodeBtn = document.getElementById('decodeBtn');
-        const decodeSqlBtn = document.getElementById('decodeSqlBtn');
+        const decodeTextBtn = document.getElementById('decodeTextBtn');
         const decodedOutput = document.getElementById('decodedOutput');
         const decodePreview = document.getElementById('decodePreview');
-        const clearDecode = document.getElementById('clearDecode');
+        const clearDecodeText = document.getElementById('clearDecodeText');
 
         let currentImageData = null;
         let currentImageBase64 = null;
@@ -1077,12 +1077,7 @@
             reader.readAsDataURL(file);
         }
 
-        clearDecode.addEventListener('click', () => {
-            currentImageData = null;
-            currentImageBase64 = null;
-            decodePreview.style.display = 'none';
-            decodePreview.src = '';
-            decodeFile.value = '';
+        clearDecodeText.addEventListener('click', () => {
             decodedOutput.value = '';
         });
 
@@ -1095,13 +1090,13 @@
             decodedOutput.value = base64;
         });
 
-        decodeSqlBtn.addEventListener('click', () => {
+        decodeTextBtn.addEventListener('click', () => {
             if (!currentImageData) {
                 showAlert('Please select an image first');
                 return;
             }
             const extracted = extractData(currentImageData);
-            decodedOutput.value = extracted || 'No hidden code found or image not encoded by this tool.';
+            decodedOutput.value = extracted || 'No hidden text found or image not encoded by this tool.';
         });
     </script>
 </body>

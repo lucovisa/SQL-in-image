@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL image</title>
-    <meta name="description" content="Hide SQL code inside images. Free online steganography tool. SQL изображение, hide code in picture, steganography.">
-    <meta name="keywords" content="SQL, image, steganography, hide code, sql изображение, спрятать код, картинка, LSB, encode, decode">
+    <title>LucCode</title>
+    <meta name="description" content="LucCode - Hide SQL code inside images. Free online steganography tool. SQL изображение, hide code in picture, steganography.">
+    <meta name="keywords" content="LucCode, SQL, image, steganography, hide code, sql изображение, спрятать код, картинка, LSB, encode, decode">
     <meta name="author" content="lucovisa">
     <meta name="robots" content="index, follow">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="SQL image">
-    <meta property="og:title" content="SQL image - Hide SQL Code in Images">
+    <meta property="og:site_name" content="LucCode">
+    <meta property="og:title" content="LucCode - Hide SQL Code in Images">
     <meta property="og:description" content="Hide SQL code inside images. SQL изображение. Free online steganography tool.">
     <meta property="og:image" content="https://lucovisa.github.io/SQL-in-image/og-image.png">
     <meta property="og:url" content="https://lucovisa.github.io/SQL-in-image/">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="SQL image - Hide SQL Code in Images">
+    <meta name="twitter:title" content="LucCode - Hide SQL Code in Images">
     <meta name="twitter:description" content="Hide SQL code inside images. SQL изображение. Free steganography tool.">
     <meta name="twitter:image" content="https://lucovisa.github.io/SQL-in-image/og-image.png">
     <style>
@@ -55,7 +55,7 @@
         }
         body {
             background-color: #3a6ea5;
-            background-image: url('data:image/svg+xml;utf8,<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="800" height="600" fill="%233a6ea5"/><rect y="420" width="800" height="180" fill="%235c8c3c"/><ellipse cx="150" cy="100" rx="60" ry="30" fill="white" opacity="0.8"/><ellipse cx="200" cy="90" rx="50" ry="25" fill="white" opacity="0.7"/><ellipse cx="650" cy="80" rx="55" ry="28" fill="white" opacity="0.75"/><ellipse cx="700" cy="70" rx="45" ry="22" fill="white" opacity="0.65"/><ellipse cx="400" cy="150" rx="40" ry="20" fill="white" opacity="0.5"/><ellipse cx="450" cy="140" rx="35" ry="18" fill="white" opacity="0.45"/></svg>');
+            background-image: url('data:image/svg+xml;utf8,<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="800" height="600" fill="%233a6ea5"/><rect y="420" width="800" height="180" fill="%235c8c3c"/><rect x="100" y="70" width="80" height="20" fill="white" opacity="0.8"/><rect x="90" y="90" width="100" height="20" fill="white" opacity="0.8"/><rect x="110" y="110" width="60" height="15" fill="white" opacity="0.8"/><rect x="140" y="70" width="40" height="20" fill="white" opacity="0.8"/><rect x="130" y="90" width="40" height="20" fill="white" opacity="0.8"/><rect x="600" y="50" width="90" height="20" fill="white" opacity="0.75"/><rect x="590" y="70" width="110" height="20" fill="white" opacity="0.75"/><rect x="610" y="90" width="70" height="15" fill="white" opacity="0.75"/><rect x="640" y="50" width="50" height="20" fill="white" opacity="0.75"/><rect x="630" y="70" width="50" height="20" fill="white" opacity="0.75"/><rect x="360" y="120" width="60" height="15" fill="white" opacity="0.5"/><rect x="350" y="135" width="80" height="15" fill="white" opacity="0.5"/><rect x="400" y="120" width="40" height="15" fill="white" opacity="0.5"/><rect x="390" y="135" width="40" height="15" fill="white" opacity="0.5"/></svg>');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -440,7 +440,7 @@
 
     <div class="window" id="mainWindow">
         <div class="title-bar" id="mainTitleBar">
-            <span>Text to Image</span>
+            <span>LucCode</span>
             <div class="title-bar-buttons">
                 <button class="title-btn">_</button>
                 <button class="title-btn">□</button>
@@ -550,7 +550,7 @@
     <div class="alert-modal" id="alertModal">
         <div class="alert-window">
             <div class="modal-title-bar">
-                <span>Text to Image</span>
+                <span>LucCode</span>
                 <div class="title-bar-buttons">
                     <button class="title-btn close" id="closeAlertBtn">×</button>
                 </div>
@@ -907,10 +907,13 @@
         });
 
         createImageBtn.addEventListener('click', () => {
-            const base64Data = createInput.value.trim();
+            let base64Data = createInput.value.trim();
             if (!base64Data) {
                 showAlert('Please enter base64 image code first');
                 return;
+            }
+            if (!base64Data.startsWith('data:image/')) {
+                base64Data = 'data:image/png;base64,' + base64Data;
             }
             const img = new Image();
             img.onload = () => {

@@ -439,6 +439,7 @@
         <div class="content">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="encode">Encode</button>
+                <button class="tab-btn" data-tab="create">Create Image</button>
                 <button class="tab-btn" data-tab="decode">Decode</button>
             </div>
             <div class="tab-content active" id="encodeTab">
@@ -456,8 +457,16 @@
                     </div>
                 </div>
                 <button class="btn" id="encodeBtn">Encode to Image</button>
-                <button class="btn" id="createEncodeBtn">Create Image</button>
                 <div class="output-area" id="encodeOutput"></div>
+            </div>
+            <div class="tab-content" id="createTab">
+                <div class="tab-header">
+                    <h3>Create image from code</h3>
+                    <button class="clear-btn" id="clearCreate">Clear</button>
+                </div>
+                <textarea id="createInput" placeholder="Paste your code or data here..."></textarea>
+                <button class="btn" id="createImageBtn">Create Image</button>
+                <div class="output-area" id="createOutput"></div>
             </div>
             <div class="tab-content" id="decodeTab">
                 <div class="tab-header">
@@ -471,7 +480,6 @@
                 <input type="file" id="decodeFile" accept="image/*" style="display:none">
                 <button class="btn" id="decodeBtn">Decode Image</button>
                 <button class="btn" id="decodeSqlBtn">Decode SQL</button>
-                <button class="btn" id="createDecodeBtn">Create Image</button>
                 <h4>Extracted code:</h4>
                 <textarea id="decodedOutput" readonly></textarea>
             </div>
@@ -730,7 +738,6 @@
         }
 
         const encodeBtn = document.getElementById('encodeBtn');
-        const createEncodeBtn = document.getElementById('createEncodeBtn');
         const coverImage = document.getElementById('coverImage');
         const encodeDropZone = document.getElementById('encodeDropZone');
         const encodePreview = document.getElementById('encodePreview');
@@ -776,22 +783,6 @@
             document.getElementById('encodeOutput').innerHTML = '';
         });
 
-        createEncodeBtn.addEventListener('click', () => {
-            const sqlCode = document.getElementById('sqlInput').value.trim();
-            if (!sqlCode) {
-                showAlert('Please enter SQL code first');
-                return;
-            }
-            const canvas = generateDefaultCover(600, 400);
-            const dataUrl = canvas.toDataURL('image/png');
-            const outputDiv = document.getElementById('encodeOutput');
-            outputDiv.innerHTML = `
-                <img src="${dataUrl}" alt="Created image">
-                <br>
-                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
-            `;
-        });
-
         encodeBtn.addEventListener('click', async () => {
             const sqlCode = document.getElementById('sqlInput').value.trim();
             if (!sqlCode) {
@@ -832,11 +823,46 @@
             }
         });
 
+        const createInput = document.getElementById('createInput');
+        const createImageBtn = document.getElementById('createImageBtn');
+        const clearCreate = document.getElementById('clearCreate');
+        const createOutput = document.getElementById('createOutput');
+
+        clearCreate.addEventListener('click', () => {
+            createInput.value = '';
+            createOutput.innerHTML = '';
+        });
+
+        createImageBtn.addEventListener('click', () => {
+            const inputData = createInput.value.trim();
+            if (!inputData) {
+                showAlert('Please enter data first');
+                return;
+            }
+            const canvas = generateDefaultCover(600, 400);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 600, 400);
+            ctx.fillStyle = '#000080';
+            ctx.font = 'bold 16px Tahoma';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const lines = inputData.split('\n').slice(0, 20);
+            lines.forEach((line, index) => {
+                ctx.fillText(line.substring(0, 60), 300, 30 + index * 18);
+            });
+            const dataUrl = canvas.toDataURL('image/png');
+            createOutput.innerHTML = `
+                <img src="${dataUrl}" alt="Created image">
+                <br>
+                <a href="${dataUrl}" download="created.png" class="btn">Download Image</a>
+            `;
+        });
+
         const dropZone = document.getElementById('dropZone');
         const decodeFile = document.getElementById('decodeFile');
         const decodeBtn = document.getElementById('decodeBtn');
         const decodeSqlBtn = document.getElementById('decodeSqlBtn');
-        const createDecodeBtn = document.getElementById('createDecodeBtn');
         const decodedOutput = document.getElementById('decodedOutput');
         const decodePreview = document.getElementById('decodePreview');
         const clearDecode = document.getElementById('clearDecode');
@@ -892,20 +918,6 @@
             decodePreview.src = '';
             decodeFile.value = '';
             decodedOutput.value = '';
-        });
-
-        createDecodeBtn.addEventListener('click', () => {
-            if (!currentImageData) {
-                showAlert('Please select an image first');
-                return;
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = currentImageData.width;
-            canvas.height = currentImageData.height;
-            const ctx = canvas.getContext('2d');
-            ctx.putImageData(currentImageData, 0, 0);
-            const dataUrl = canvas.toDataURL('image/png');
-            decodedOutput.value = dataUrl;
         });
 
         decodeBtn.addEventListener('click', () => {
